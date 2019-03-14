@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
-// @name         Seashell
+// @name         Seashell Extensions - Keyboard Shortcuts and More...
 // @namespace    https://github.com/jfdoming/
-// @version      0.2
+// @version      0.3
 // @license      GNU GPL v3
 // @description  Seashell extensions, including keyboard shortcuts and other helpful features
 // @author       Julian Dominguez-Schatz
