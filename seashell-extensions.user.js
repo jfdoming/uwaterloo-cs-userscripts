@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         Seashell Extensions - Keyboard Shortcuts and More...
 // @namespace    https://github.com/jfdoming/
-// @version      0.3
+// @version      0.4.1
 // @license      GNU GPL v3
 // @description  Seashell extensions, including keyboard shortcuts and other helpful features
 // @author       Julian Dominguez-Schatz
@@ -131,7 +131,7 @@
     helpLink.style.textDecoration = "none";
     helpLink.style.fontVariant = "small-caps";
     helpLink.style.fontSize = "14px";
-    helpLink.textContent = "extension shortcuts";
+    helpLink.textContent = "extension help";
     helpLink.addEventListener("click", () => {
         helpLink.blur();
         let str = shortcuts.reduce((rror, el) => {
