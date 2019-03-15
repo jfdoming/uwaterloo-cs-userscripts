@@ -70,7 +70,7 @@
         }
 
         console.log("Keyboard shortcut added:", description);
-        shortcuts.push({keyCode: keyCode, modifiers: modifiers, action: action, triggered: false});
+        shortcuts.push({description: description, keyCode: keyCode, modifiers: modifiers, action: action, triggered: false});
     }
 
     addCtrlShortcut("KeyB", () => {
@@ -117,4 +117,96 @@
             focusButton.focus();
         }, 250);
     }, "Ctrl-Shift-S (submit to Marmoset)");
+
+
+    // add help button
+    let helpLinkContainer = document.createElement("li");
+    helpLinkContainer.style.display = "inline";
+    let helpLink = document.createElement("a");
+    helpLink.href = "";
+    helpLink.classList.add("btn");
+    helpLink.classList.add("custom-glyph");
+    helpLink.style.border = 0;
+    helpLink.style.outline = 0;
+    helpLink.style.textDecoration = "none";
+    helpLink.style.fontVariant = "small-caps";
+    helpLink.style.fontSize = "14px";
+    helpLink.textContent = "extension shortcuts";
+    helpLink.addEventListener("click", () => {
+        helpLink.blur();
+        let str = shortcuts.reduce((rror, el) => {
+          return rror + el.description + "<br/>";
+        }, "");
+        openDialog(str, "Keyboard Shortcuts");
+    });
+
+    let parent = document.getElementsByClassName("navbar-icons");
+    helpLinkContainer.appendChild(helpLink);
+    if (parent && parent.length > 0) {
+      parent[0].insertBefore(helpLinkContainer, parent[0].firstChild);
+    }
+
+    // add help screen
+    let helpTextWrapper = document.createElement("div");
+    let helpTextBackground = document.createElement("div");
+    helpTextWrapper.style.zIndex = 10000000;
+    helpTextWrapper.style.position = "fixed";
+    helpTextWrapper.style.top = "0";
+    helpTextWrapper.style.left = "0";
+    helpTextWrapper.style.width = "100%";
+    helpTextWrapper.style.height = "100%";
+    helpTextWrapper.style.display = "none";
+    helpTextWrapper.style.flexDirection = "row";
+    helpTextWrapper.style.justifyContent = "center";
+    helpTextWrapper.style.alignItems = "center";
+    helpTextBackground.style.zIndex = 9999999;
+    helpTextBackground.style.opacity = 0.7;
+    helpTextBackground.style.backgroundColor = "white";
+    helpTextBackground.style.position = "fixed";
+    helpTextBackground.style.top = "0";
+    helpTextBackground.style.left = "0";
+    helpTextBackground.style.width = "100%";
+    helpTextBackground.style.height = "100%";
+    helpTextBackground.addEventListener("click", closeDialog);
+
+    let helpTextContainer = document.createElement("div");
+    helpTextContainer.style.borderRadius = "10px";
+    helpTextContainer.style.color = "#CCCCCC";
+    helpTextContainer.style.width = "400px";
+    helpTextContainer.style.maxHeight = "75%";
+    helpTextContainer.style.overflow = "auto";
+    helpTextContainer.style.overflowWrap = "break-word";
+    helpTextContainer.style.zIndex = 10000001;
+    helpTextContainer.style.padding = "2em";
+    helpTextContainer.style.display = "block";
+    helpTextContainer.classList.add("modal-content");
+    
+    let helpTextTitle = document.createElement("div");
+    helpTextTitle.style.marginBottom = "1em";
+    helpTextTitle.style.borderBottom = "1px solid #CCCCCC";
+    helpTextTitle.style.fontSize = "1.5em";
+    
+    let helpTextBody = document.createElement("div");
+    helpTextBody.style.margin = "0";
+    helpTextBody.style.padding = "0";
+    helpTextBody.style.border = "none";
+
+    helpTextContainer.appendChild(helpTextTitle);
+    helpTextContainer.appendChild(helpTextBody);
+
+    helpTextWrapper.appendChild(helpTextBackground);
+    helpTextWrapper.appendChild(helpTextContainer);
+    document.body.appendChild(helpTextWrapper);
+
+    function openDialog(text, titleText = "Alert") {
+        helpTextTitle.innerHTML = titleText;
+        helpTextBody.innerHTML = text;
+        document.body.classList.add("modal-open");
+        helpTextWrapper.style.display = "flex";
+    }
+
+    function closeDialog() {
+        document.body.classList.remove("modal-open");
+        helpTextWrapper.style.display = "none";
+    }
 })();
