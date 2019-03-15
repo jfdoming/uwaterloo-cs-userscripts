@@ -1,19 +1,26 @@
 // ==UserScript==
 // @name         Seashell Extensions - Keyboard Shortcuts and More...
 // @namespace    https://github.com/jfdoming/
-// @version      0.5.1
+// @version      0.5.2
 // @license      GNU GPL v3
 // @description  Seashell extensions, including keyboard shortcuts and other helpful features
 // @author       Julian Dominguez-Schatz
 // @match        https://www.student.cs.uwaterloo.ca/~cs136//seashell/*
 // @match        https://www.student.cs.uwaterloo.ca/~cs136/seashell-old/*
-// @grant        none
+// @grant        GM_addStyle
 // @updateURL    https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/seashell-extensions.user.js
 // @downloadURL  https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/seashell-extensions.user.js
 // ==/UserScript==
 
 (function() {
     'use strict';
+
+    function toSentenceCase(text) {
+        return text.length > 0 ? text[0].toUpperCase() + text.substring(1) : "";
+    }
+
+    // fix for the Marmoset result dialog
+    GM_addStyle(".marmoset-details-body { color: #CCCCCC }");
 
     // HELP DIALOG //
 
@@ -22,17 +29,16 @@
     helpLinkContainer.style.display = "inline";
     let helpLink = document.createElement("a");
     helpLink.href = "";
-    helpLink.classList.add("btn");
     helpLink.classList.add("custom-glyph");
     helpLink.style.border = 0;
     helpLink.style.outline = 0;
     helpLink.style.textDecoration = "none";
     helpLink.style.fontVariant = "small-caps";
     helpLink.style.fontSize = "14px";
-    helpLink.textContent = "extension help";
+    helpLink.textContent = "ext. help";
     helpLink.addEventListener("click", () => {
         let str = shortcuts.reduce((rror, el) => {
-          return rror + el.description + "<br/>";
+          return rror + "<b>" + el.shortcut + ":</b> " + toSentenceCase(el.description) + "<br/>";
         }, "");
         openDialog(str, "Keyboard Shortcuts");
     });
@@ -44,6 +50,10 @@
     }
 
     // add help screen
+    let HELP_TRANSITION_TIME = "0.3s";
+    let HELP_TRANSITION_DISTANCE = "100px";
+
+
     let helpTextWrapper = document.createElement("div");
     helpTextWrapper.style.zIndex = 10000000;
     helpTextWrapper.style.position = "fixed";
@@ -51,10 +61,13 @@
     helpTextWrapper.style.left = "0";
     helpTextWrapper.style.width = "100%";
     helpTextWrapper.style.height = "100%";
-    helpTextWrapper.style.display = "none";
+    helpTextWrapper.style.display = "flex";
     helpTextWrapper.style.flexDirection = "row";
     helpTextWrapper.style.justifyContent = "center";
     helpTextWrapper.style.alignItems = "center";
+    helpTextWrapper.style.opacity = "0";
+    helpTextWrapper.style.pointerEvents = "none";
+    helpTextWrapper.style.transition = "opacity " + HELP_TRANSITION_TIME + " ease";
     helpTextWrapper.tabIndex = "0";
     helpTextWrapper.addEventListener("keydown", (e) => {
       if (e.key == "Escape") {
@@ -74,28 +87,31 @@
     helpTextBackground.addEventListener("click", closeDialog);
 
     let helpTextContainer = document.createElement("div");
-    helpTextContainer.style.borderRadius = "10px";
+    helpTextContainer.style.boxShadow = "#444444 0px 5px 15px";
+    helpTextContainer.style.borderColor = "#E5E5E5";
     helpTextContainer.style.color = "#CCCCCC";
-    helpTextContainer.style.width = "400px";
+    helpTextContainer.style.width = "600px";
     helpTextContainer.style.maxHeight = "75%";
     helpTextContainer.style.overflow = "auto";
     helpTextContainer.style.overflowWrap = "break-word";
     helpTextContainer.style.zIndex = 10000001;
-    helpTextContainer.style.padding = "2em";
     helpTextContainer.style.display = "block";
+    helpTextContainer.style.position = "relative";
+    helpTextContainer.style.top = "-" + HELP_TRANSITION_DISTANCE;
+    helpTextContainer.style.transition = "top " + HELP_TRANSITION_TIME + " ease";
     helpTextContainer.classList.add("modal-content");
 
-    let helpTextTitle = document.createElement("div");
-    helpTextTitle.style.marginBottom = "1em";
-    helpTextTitle.style.borderBottom = "1px solid #CCCCCC";
-    helpTextTitle.style.fontSize = "1.5em";
+    let helpTextHeader = document.createElement("div");
+    helpTextHeader.classList.add("modal-header");
+
+    let helpTextTitle = document.createElement("h4");
+    helpTextTitle.classList.add("modal-title");
+    helpTextHeader.appendChild(helpTextTitle);
 
     let helpTextBody = document.createElement("div");
-    helpTextBody.style.margin = "0";
-    helpTextBody.style.padding = "0";
-    helpTextBody.style.border = "none";
+    helpTextBody.classList.add("modal-body");
 
-    helpTextContainer.appendChild(helpTextTitle);
+    helpTextContainer.appendChild(helpTextHeader);
     helpTextContainer.appendChild(helpTextBody);
 
     helpTextWrapper.appendChild(helpTextBackground);
@@ -106,19 +122,23 @@
         helpTextTitle.innerHTML = titleText;
         helpTextBody.innerHTML = text;
         document.body.classList.add("modal-open");
-        helpTextWrapper.style.display = "flex";
+        helpTextWrapper.style.opacity = "1";
+        helpTextWrapper.style.pointerEvents = "auto";
+        helpTextContainer.style.top = "0";
         helpTextWrapper.focus();
     }
 
     function closeDialog() {
         document.body.classList.remove("modal-open");
-        helpTextWrapper.style.display = "none";
+        helpTextWrapper.style.opacity = "0";
+        helpTextWrapper.style.pointerEvents = "none";
+        helpTextContainer.style.top = "-" + HELP_TRANSITION_DISTANCE;
     }
 
     // END HELP DIALOG //
 
     function ignoreShortcuts() {
-        return document.getElementsByClassName("modal fade ng-isolate-scope in")[0];
+        return !!document.getElementsByClassName("modal fade ng-isolate-scope in")[0];
     }
 
     let runTab = null;
@@ -126,7 +146,7 @@
     let shortcuts = [];
     let shortcutTriggered = false;
 
-    function addCtrlShortcut(keyData, action, description = "") {
+    function addCtrlShortcut(keyData, action, shortcut = "", description = "") {
         if (!keyData || !action) {
             return;
         }
@@ -173,7 +193,7 @@
         }
 
         console.log("Keyboard shortcut added:", description);
-        shortcuts.push({description: description, keyCode: keyCode, modifiers: modifiers, action: action, triggered: false});
+        shortcuts.push({shortcut: shortcut, description: description, keyCode: keyCode, modifiers: modifiers, action: action, triggered: false});
     }
 
     addCtrlShortcut("KeyB", () => {
@@ -184,7 +204,7 @@
 
         runner.click();
         runTab = document.getElementsByClassName("file-link-active")[0];
-    }, "Ctrl-B (set current file as run file)");
+    }, "Ctrl-B", "set current file as run file");
 
     addCtrlShortcut("KeyR", (e) => {
         if (!runTab) {
@@ -195,10 +215,23 @@
         setTimeout(() => {
             document.getElementById("toolbar-set-runner").click();
         }, 250);
-    }, "Ctrl-R (execute run file)");
+    }, "Ctrl-R", "execute run file");
+
+    addCtrlShortcut("KeyE", (e) => {
+        if (!runTab) {
+            return;
+        }
+
+        runTab.click();
+        setTimeout(() => {
+            document.getElementById("toolbar-set-runner").click();
+        }, 250);
+    }, "Ctrl-E", "execute tests");
 
     function getButtonByName(name) {
-        return Array.from(document.getElementsByClassName("btn btn-link")).filter((el) => {return el.children && el.children[0] && el.children[0].innerHTML == name})[0];
+        return Array.from(document.getElementsByClassName("btn btn-link")).filter((el) => {
+            return el.children && el.children[0] && el.children[0].innerHTML == name
+        })[0];
     }
 
     // add test
@@ -209,7 +242,7 @@
         }
 
         testButton.click();
-    }, "Ctrl-Shift-1 (add test)");
+    }, "Ctrl-Shift-1", "add test");
 
     // add file
     addCtrlShortcut(["Digit2", ["shiftKey"]], (e) => {
@@ -219,7 +252,7 @@
         }
 
         fileButton.click();
-    }, "Ctrl-Shift-2 (add file)");
+    }, "Ctrl-Shift-2", "add file");
 
     // submit
     addCtrlShortcut(["KeyS", ["shiftKey"]], (e) => {
@@ -233,10 +266,10 @@
             let focusButton = document.querySelectorAll("input[value='Submit']")[0];
             focusButton.focus();
         }, 250);
-    }, "Ctrl-Shift-S (submit to Marmoset)");
+    }, "Ctrl-Shift-S", "submit to Marmoset");
 
     // help
     addCtrlShortcut("F1", (e) => {
         helpLink.click();
-    }, "Ctrl-F1 (open this help page)");
+    }, "Ctrl-F1", "open this help page");
 })();
