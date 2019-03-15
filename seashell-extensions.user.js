@@ -1,11 +1,12 @@
-﻿// ==UserScript==
+// ==UserScript==
 // @name         Seashell Extensions - Keyboard Shortcuts and More...
 // @namespace    https://github.com/jfdoming/
-// @version      0.5.0
+// @version      0.5.1
 // @license      GNU GPL v3
 // @description  Seashell extensions, including keyboard shortcuts and other helpful features
 // @author       Julian Dominguez-Schatz
-// @match        https://www.student.cs.uwaterloo.ca/~cs136//seashell/frontend.html
+// @match        https://www.student.cs.uwaterloo.ca/~cs136//seashell/*
+// @match        https://www.student.cs.uwaterloo.ca/~cs136/seashell-old/*
 // @grant        none
 // @updateURL    https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/seashell-extensions.user.js
 // @downloadURL  https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/seashell-extensions.user.js
@@ -63,7 +64,7 @@
 
     let helpTextBackground = document.createElement("div");
     helpTextBackground.style.zIndex = 9999999;
-    helpTextBackground.style.opacity = 0.7;
+    helpTextBackground.style.opacity = 0.6;
     helpTextBackground.style.backgroundColor = "white";
     helpTextBackground.style.position = "fixed";
     helpTextBackground.style.top = "0";
@@ -83,12 +84,12 @@
     helpTextContainer.style.padding = "2em";
     helpTextContainer.style.display = "block";
     helpTextContainer.classList.add("modal-content");
-    
+
     let helpTextTitle = document.createElement("div");
     helpTextTitle.style.marginBottom = "1em";
     helpTextTitle.style.borderBottom = "1px solid #CCCCCC";
     helpTextTitle.style.fontSize = "1.5em";
-    
+
     let helpTextBody = document.createElement("div");
     helpTextBody.style.margin = "0";
     helpTextBody.style.padding = "0";
@@ -235,7 +236,7 @@
     }, "Ctrl-Shift-S (submit to Marmoset)");
 
     // help
-    addCtrlShortcut(["KeyH", ["shiftKey"]], (e) => {
+    addCtrlShortcut("F1", (e) => {
         helpLink.click();
-    }, "Ctrl-Shift-H (open this help page)");
+    }, "Ctrl-F1 (open this help page)");
 })();
