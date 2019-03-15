@@ -102,7 +102,7 @@
         }
 
         testButton.click();
-    }, "Ctrl-@ (add test)");
+    }, "Ctrl-Shift-1 (add test)");
 
     // submit
     addCtrlShortcut(["KeyS", ["shiftKey"]], (e) => {
