@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Seashell Extensions - Keyboard Shortcuts and More...
 // @namespace    https://github.com/jfdoming/
-// @version      0.5.2
+// @version      0.6.0
 // @license      GNU GPL v3
 // @description  Seashell extensions, including keyboard shortcuts and other helpful features
 // @author       Julian Dominguez-Schatz
@@ -14,6 +14,246 @@
 
 (function() {
     'use strict';
+
+    let pDropdown = null;
+
+    {
+        GM_addStyle(`
+html {
+overflow-y: scroll;
+}
+#seashell-logo {
+cursor: auto !important;
+}
+#seashell-logo > div {
+cursor: pointer;
+}
+
+a.dropdown-toggle {
+cursor: pointer;
+}
+a.dropdown-toggle:focus {
+/*outline: thin dotted;
+outline: 5px auto -webkit-focus-ring-color;
+outline-offset: -2px;*/
+}
+a.dropdown-toggle:hover, a.dropdown-toggle:focus, a.dropdown-toggle[aria-expanded="true"] {
+color: #FF5555 !important;
+}
+
+#questions-row-container {
+display: none;
+}
+
+#project-dropdown {
+font-size: 20px;
+text-align: center;
+min-width: 20ch;
+border: 1px solid #666666;
+display: inline-block;
+position: relative;
+float: right;
+}
+#project-dd-wrapper {
+position: absolute;
+top: calc(15px + 1.42857143 * 1em);
+left: 0;
+clip: rect(0, 100vh, 100vh, -50px);
+z-index: 80;
+width: 100%;
+pointer-events: none;
+}
+#project-dd-wrapper.visible {
+pointer-events: auto;
+}
+#project-dd-items {
+transform: translateY(-100%);
+transition: transform 0.2s ease, box-shadow 0.2s ease;
+box-shadow: none;
+}
+#project-dd-wrapper.visible > #project-dd-items {
+transform: translateY(0);
+box-shadow: 0px 10px 20px 0px rgba(0, 0, 0, 0.30);
+}
+.project-dd-item {
+cursor: pointer;
+padding: 5px;
+color: white;
+background: #444444;
+//transition: color 0.3s ease, background 0.3s ease;
+}
+.project-dd-item:hover {
+color: #FFAAAA;
+}
+.project-dd-item:hover, .project-dd-item.focus {
+background: #3C3C3C;
+}
+`);
+        const div = (id) => {
+            const el = document.createElement("div");
+            if (id) {
+                el.id = id;
+            }
+            return el;
+        }
+
+        let wasOnProjectPage = false;
+        const listener = () => {
+            const onProjectPage = !!location.href.match(/.+\/frontend.html\#\/project\/.+/);
+            if (onProjectPage) {
+                if (!wasOnProjectPage) {
+                    console.log("navigated to project page");
+
+                    const dropdownIntervalId = setInterval(() => {
+                        const dropdown = document.querySelector("a.dropdown-toggle");
+                        if (dropdown) {
+                            dropdown.tabIndex = "0";
+                            dropdown.addEventListener("keydown", (e) => {
+                                if (e.code == "Space" || e.code == "Enter") {
+                                    dropdown.click();
+
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    return false;
+                                }
+                            });
+                            // CLICK DOESN'T WORK BECAUSE IT GETS BLURRED BEFORE THE BUTTON GETS CLICKED
+                            dropdown.addEventListener("blur", () => {
+                                if (dropdown.parentNode.classList.contains("open")) {
+                                    dropdown.click();
+                                }
+                            });
+
+                            const links = document.querySelectorAll(".questions-row a");
+                            if (links) {
+                                const elements = Array.from(links).map(el => ({el: el, text: el.textContent})).reverse();
+
+                                console.log("kdufhgk", document.getElementById("project-display"));
+                                if (!document.getElementById("project-display")) {
+                                    const item = text => {
+                                        const el = div();
+                                        el.textContent = text;
+                                        el.classList.add("project-dd-item");
+                                        return el;
+                                    };
+
+                                    const pItems = div("project-dd-items");
+                                    const pWrapper = div("project-dd-wrapper");
+                                    const pDisplay = div("project-dd-display");
+                                    pDropdown = div("project-dropdown");
+
+                                    pDropdown.select = i => {
+                                        pDropdown.dataset.currentClicked = "false";
+
+                                        if (typeof (pDropdown.dataset.kbCurrent) !== "undefined") {
+                                            pItems.children[+pDropdown.dataset.kbCurrent].classList.remove("focus");
+                                        }
+
+                                        pDropdown.dataset.kbCurrent = i;
+
+                                        pItems.children[+pDropdown.dataset.kbCurrent].classList.add("focus");
+                                        pDisplay.children[0].textContent = elements[i].text;
+                                    };
+                                    pDropdown.next = () => {
+                                        pDropdown.select(Math.min(+pDropdown.dataset.kbCurrent + 1, pItems.children.length - 1));
+                                    };
+                                    pDropdown.previous = () => {
+                                        pDropdown.select(Math.max(+pDropdown.dataset.kbCurrent - 1, 0));
+                                    };
+                                    pDropdown.open = () => {
+                                        pWrapper.classList.add("visible");
+                                    };
+                                    pDropdown.close = () => {
+                                        pWrapper.classList.remove("visible");
+                                        if (pDropdown.dataset.currentClicked != "true") {
+                                            pDropdown.dataset.currentClicked = "true";
+                                            elements[+pDropdown.dataset.kbCurrent].el.click();
+                                        }
+                                    };
+                                    pDropdown.toggle = () => {
+                                        if (pWrapper.classList.contains("visible")) {
+                                            pDropdown.close();
+                                        } else {
+                                            pDropdown.open();
+                                        }
+                                    };
+
+                                    pDropdown.addEventListener("keydown", e => {
+                                        let eat = false;
+                                        if (e.key == "Escape") {
+                                            pDropdown.close();
+                                            eat = true;
+                                        } else if (e.key == "Enter" || e.key == " ") {
+                                            pDropdown.toggle();
+                                            eat = true;
+                                        } else if (e.key == "ArrowUp") {
+                                            pDropdown.previous();
+                                            eat = true;
+                                        } else if (e.key == "ArrowDown") {
+                                            pDropdown.next();
+                                            eat = true;
+                                        }
+
+                                        if (eat) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            return false;
+                                        }
+                                        return true;
+                                    });
+
+                                    pDisplay.tabIndex = 0;
+                                    pDisplay.appendChild(item(elements[0].text));
+
+                                    elements.forEach((el, i) => {
+                                        const itm = item(el.text);
+                                        itm.addEventListener("click", () => {
+                                            pDropdown.select(i);
+                                            pDropdown.close();
+                                        });
+                                        pItems.appendChild(itm);
+                                    });
+
+                                    pDisplay.addEventListener("click", pDropdown.toggle);
+                                    document.addEventListener("click", e => {
+                                        if (!pDropdown.contains(e.target)) {
+                                            pDropdown.close();
+                                        }
+                                    });
+
+                                    const active = document.querySelector(".question-link-active");
+                                    if (active) {
+                                        const index = elements.findIndex(el => el.text == active.textContent);
+                                        pDropdown.select(index);
+                                    }
+                                    pDropdown.dataset.currentClicked = "true";
+
+                                    pWrapper.appendChild(pItems);
+                                    pDropdown.appendChild(pDisplay);
+                                    pDropdown.appendChild(pWrapper);
+
+                                    const container = document.querySelector("#questions-row-container");
+                                    if (container) {
+                                        const parent = container.parentNode;
+                                        parent.style.paddingRight = "14px";
+                                        parent.parentNode.style.padding = "0";
+                                        parent.appendChild(pDropdown);
+                                    } else {
+                                        document.body.insertBefore(pDropdown, document.body.firstChild);
+                                    }
+                                }
+                            }
+
+                            clearInterval(dropdownIntervalId);
+                        }
+                    }, 500);
+                }
+            }
+            wasOnProjectPage = onProjectPage;
+        };
+        window.addEventListener("load", listener);
+        window.addEventListener("popstate", listener);
+    }
 
     function toSentenceCase(text) {
         return text.length > 0 ? text[0].toUpperCase() + text.substring(1) : "";
@@ -38,7 +278,7 @@
     helpLink.textContent = "ext. help";
     helpLink.addEventListener("click", () => {
         let str = shortcuts.reduce((rror, el) => {
-          return rror + "<b>" + el.shortcut + ":</b> " + toSentenceCase(el.description) + "<br/>";
+            return rror + "<b>" + el.shortcut + ":</b> " + toSentenceCase(el.description) + "<br/>";
         }, "");
         openDialog(str, "Keyboard Shortcuts");
     });
@@ -46,7 +286,7 @@
     let parent = document.getElementsByClassName("navbar-icons");
     helpLinkContainer.appendChild(helpLink);
     if (parent && parent.length > 0) {
-      parent[0].insertBefore(helpLinkContainer, parent[0].firstChild);
+        parent[0].insertBefore(helpLinkContainer, parent[0].firstChild);
     }
 
     // add help screen
@@ -70,9 +310,9 @@
     helpTextWrapper.style.transition = "opacity " + HELP_TRANSITION_TIME + " ease";
     helpTextWrapper.tabIndex = "0";
     helpTextWrapper.addEventListener("keydown", (e) => {
-      if (e.key == "Escape") {
-        closeDialog();
-      }
+        if (e.key == "Escape") {
+            closeDialog();
+        }
     });
 
     let helpTextBackground = document.createElement("div");
@@ -152,9 +392,17 @@
         }
         let keyCode = keyData;
         let modifiers = [];
+        let antiModifiers = [];
         if (typeof keyData != "string") {
             keyCode = keyData[0];
-            modifiers = keyData[1];
+
+            if (keyData.length > 1) {
+                modifiers = keyData[1];
+            }
+
+            if (keyData.length > 2) {
+                antiModifiers = keyData[2];
+            }
         }
 
         if (shortcuts.length == 0) {
@@ -174,6 +422,13 @@
                             return;
                         }
                     }
+
+                    for (let i = 0; i < el.antiModifiers.length; i++) {
+                        if (e[el.antiModifiers[i]]) {
+                            return;
+                        }
+                    }
+
                     if (e.code == el.keyCode && !el.triggered) {
                         shortcutTriggered = true;
                         el.triggered = true;
@@ -193,7 +448,7 @@
         }
 
         console.log("Keyboard shortcut added:", description);
-        shortcuts.push({shortcut: shortcut, description: description, keyCode: keyCode, modifiers: modifiers, action: action, triggered: false});
+        shortcuts.push({shortcut: shortcut, description: description, keyCode: keyCode, modifiers: modifiers, antiModifiers: antiModifiers, action: action, triggered: false});
     }
 
     addCtrlShortcut("KeyB", () => {
@@ -255,7 +510,7 @@
     }, "Ctrl-Shift-2", "add file");
 
     // submit
-    addCtrlShortcut(["KeyS", ["shiftKey"]], (e) => {
+    addCtrlShortcut(["KeyS", [], ["shiftKey"]], (e) => {
         let submitButton = getButtonByName("submit question");
         if (!submitButton || !submitButton.click) {
             return;
@@ -266,7 +521,46 @@
             let focusButton = document.querySelectorAll("input[value='Submit']")[0];
             focusButton.focus();
         }, 250);
-    }, "Ctrl-Shift-S", "submit to Marmoset");
+    }, "Ctrl-S", "open submit to Marmoset dialog");
+
+    // submit directly
+    addCtrlShortcut(["KeyS", ["shiftKey"]], (e) => {
+        let submitButton = getButtonByName("submit question");
+        if (!submitButton || !submitButton.click) {
+            return;
+        }
+
+        submitButton.click();
+
+        // Hide the dialog.
+        const style = document.createElement("style");
+        style.innerHTML = `div[role="dialog"] { display: none !important; }`;
+        document.head.appendChild(style);
+
+        setTimeout(() => {
+            let focusButton = document.querySelector("input[value='Submit']");
+            focusButton.click();
+            setTimeout(() => {
+                style.remove();
+            }, 250);
+        }, 250);
+    }, "Ctrl-Shift-S", "submit directly to Marmoset");
+
+    // next project
+    addCtrlShortcut(["ArrowLeft", ["shiftKey", "altKey"]], (e) => {
+        if (pDropdown != null) {
+            pDropdown.next();
+            pDropdown.close();
+        }
+    }, "Ctrl-Shift-Alt-Left", "next project");
+
+    // previous project
+    addCtrlShortcut(["ArrowRight", ["shiftKey", "altKey"]], (e) => {
+        if (pDropdown != null) {
+            pDropdown.previous();
+            pDropdown.close();
+        }
+    }, "Ctrl-Shift-Alt-Right", "previous project");
 
     // help
     addCtrlShortcut("F1", (e) => {
