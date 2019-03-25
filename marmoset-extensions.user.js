@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Marmoset Extension
 // @namespace    https://github.com/jfdoming/
-// @version      0.5
+// @version      0.5.1
 // @license      GNU GPL v3
 // @description  An extension that makes using Marmoset just a little easier.
 // @author       Julian Dominguez-Schatz
@@ -17,7 +17,7 @@
     GM_addStyle("* { font-family: Verdana, Arial; font-size: 14px; } table { border-style: solid; border-width: 3px; border-color: black; }");
 
     const USE_FAST_LINKS = false;
-    const CACHE_SCORES = true;
+    const CACHE_SCORES = false;
 
     const SCRIPT_TITLE = "Marmoset Extension";
 
