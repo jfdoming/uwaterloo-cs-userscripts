@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Seashell Extensions - Keyboard Shortcuts and More...
 // @namespace    https://github.com/jfdoming/
-// @version      0.6.0
+// @version      0.6.1
 // @license      GNU GPL v3
 // @description  Seashell extensions, including keyboard shortcuts and other helpful features
 // @author       Julian Dominguez-Schatz
@@ -117,130 +117,127 @@ background: #3C3C3C;
                                     return false;
                                 }
                             });
-                            // CLICK DOESN'T WORK BECAUSE IT GETS BLURRED BEFORE THE BUTTON GETS CLICKED
-                            dropdown.addEventListener("blur", () => {
-                                if (dropdown.parentNode.classList.contains("open")) {
+
+                            dropdown.addEventListener("blur", (e) => {
+                                if (dropdown.parentNode.classList.contains("open") && e.relatedTarget && !dropdown.parentNode.contains(e.relatedTarget)) {
                                     dropdown.click();
                                 }
                             });
 
                             const links = document.querySelectorAll(".questions-row a");
-                            if (links) {
+                            if (links && !document.getElementById("project-dropdown")) {
                                 const elements = Array.from(links).map(el => ({el: el, text: el.textContent})).reverse();
 
-                                console.log("kdufhgk", document.getElementById("project-display"));
-                                if (!document.getElementById("project-display")) {
-                                    const item = text => {
-                                        const el = div();
-                                        el.textContent = text;
-                                        el.classList.add("project-dd-item");
-                                        return el;
-                                    };
+                                const item = text => {
+                                    const el = div();
+                                    el.textContent = text;
+                                    el.classList.add("project-dd-item");
+                                    return el;
+                                };
 
-                                    const pItems = div("project-dd-items");
-                                    const pWrapper = div("project-dd-wrapper");
-                                    const pDisplay = div("project-dd-display");
-                                    pDropdown = div("project-dropdown");
+                                const pItems = div("project-dd-items");
+                                const pWrapper = div("project-dd-wrapper");
+                                const pDisplay = div("project-dd-display");
+                                pDropdown = div("project-dropdown");
 
-                                    pDropdown.select = i => {
-                                        pDropdown.dataset.currentClicked = "false";
+                                pDropdown.select = i => {
+                                    pDropdown.dataset.currentClicked = "false";
 
-                                        if (typeof (pDropdown.dataset.kbCurrent) !== "undefined") {
-                                            pItems.children[+pDropdown.dataset.kbCurrent].classList.remove("focus");
-                                        }
-
-                                        pDropdown.dataset.kbCurrent = i;
-
-                                        pItems.children[+pDropdown.dataset.kbCurrent].classList.add("focus");
-                                        pDisplay.children[0].textContent = elements[i].text;
-                                    };
-                                    pDropdown.next = () => {
-                                        pDropdown.select(Math.min(+pDropdown.dataset.kbCurrent + 1, pItems.children.length - 1));
-                                    };
-                                    pDropdown.previous = () => {
-                                        pDropdown.select(Math.max(+pDropdown.dataset.kbCurrent - 1, 0));
-                                    };
-                                    pDropdown.open = () => {
-                                        pWrapper.classList.add("visible");
-                                    };
-                                    pDropdown.close = () => {
-                                        pWrapper.classList.remove("visible");
-                                        if (pDropdown.dataset.currentClicked != "true") {
-                                            pDropdown.dataset.currentClicked = "true";
-                                            elements[+pDropdown.dataset.kbCurrent].el.click();
-                                        }
-                                    };
-                                    pDropdown.toggle = () => {
-                                        if (pWrapper.classList.contains("visible")) {
-                                            pDropdown.close();
-                                        } else {
-                                            pDropdown.open();
-                                        }
-                                    };
-
-                                    pDropdown.addEventListener("keydown", e => {
-                                        let eat = false;
-                                        if (e.key == "Escape") {
-                                            pDropdown.close();
-                                            eat = true;
-                                        } else if (e.key == "Enter" || e.key == " ") {
-                                            pDropdown.toggle();
-                                            eat = true;
-                                        } else if (e.key == "ArrowUp") {
-                                            pDropdown.previous();
-                                            eat = true;
-                                        } else if (e.key == "ArrowDown") {
-                                            pDropdown.next();
-                                            eat = true;
-                                        }
-
-                                        if (eat) {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            return false;
-                                        }
-                                        return true;
-                                    });
-
-                                    pDisplay.tabIndex = 0;
-                                    pDisplay.appendChild(item(elements[0].text));
-
-                                    elements.forEach((el, i) => {
-                                        const itm = item(el.text);
-                                        itm.addEventListener("click", () => {
-                                            pDropdown.select(i);
-                                            pDropdown.close();
-                                        });
-                                        pItems.appendChild(itm);
-                                    });
-
-                                    pDisplay.addEventListener("click", pDropdown.toggle);
-                                    document.addEventListener("click", e => {
-                                        if (!pDropdown.contains(e.target)) {
-                                            pDropdown.close();
-                                        }
-                                    });
-
-                                    const active = document.querySelector(".question-link-active");
-                                    if (active) {
-                                        const index = elements.findIndex(el => el.text == active.textContent);
-                                        pDropdown.select(index);
+                                    if (typeof (pDropdown.dataset.kbCurrent) !== "undefined") {
+                                        pItems.children[+pDropdown.dataset.kbCurrent].classList.remove("focus");
                                     }
-                                    pDropdown.dataset.currentClicked = "true";
 
-                                    pWrapper.appendChild(pItems);
-                                    pDropdown.appendChild(pDisplay);
-                                    pDropdown.appendChild(pWrapper);
+                                    pDropdown.dataset.kbCurrent = i;
 
-                                    const container = document.querySelector("#questions-row-container");
-                                    if (container) {
-                                        const parent = container.parentNode;
-                                        parent.style.paddingRight = "14px";
-                                        parent.parentNode.style.padding = "0";
-                                        parent.appendChild(pDropdown);
+                                    pItems.children[+pDropdown.dataset.kbCurrent].classList.add("focus");
+                                    pDisplay.children[0].textContent = elements[i].text;
+                                };
+                                pDropdown.next = () => {
+                                    pDropdown.select(Math.min(+pDropdown.dataset.kbCurrent + 1, pItems.children.length - 1));
+                                };
+                                pDropdown.previous = () => {
+                                    pDropdown.select(Math.max(+pDropdown.dataset.kbCurrent - 1, 0));
+                                };
+                                pDropdown.open = () => {
+                                    pWrapper.classList.add("visible");
+                                };
+                                pDropdown.close = () => {
+                                    pWrapper.classList.remove("visible");
+                                    if (pDropdown.dataset.currentClicked != "true") {
+                                        pDropdown.dataset.currentClicked = "true";
+                                        elements[+pDropdown.dataset.kbCurrent].el.click();
+                                    }
+                                };
+                                pDropdown.toggle = () => {
+                                    if (pWrapper.classList.contains("visible")) {
+                                        pDropdown.close();
                                     } else {
-                                        document.body.insertBefore(pDropdown, document.body.firstChild);
+                                        pDropdown.open();
                                     }
+                                };
+
+                                pDropdown.addEventListener("keydown", e => {
+                                    let eat = false;
+                                    if (e.key == "Escape") {
+                                        pDropdown.close();
+                                        eat = true;
+                                    } else if (e.key == "Enter" || e.key == " ") {
+                                        pDropdown.toggle();
+                                        eat = true;
+                                    } else if (e.key == "ArrowUp") {
+                                        pDropdown.previous();
+                                        eat = true;
+                                    } else if (e.key == "ArrowDown") {
+                                        pDropdown.next();
+                                        eat = true;
+                                    }
+
+                                    if (eat) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        return false;
+                                    }
+                                    return true;
+                                });
+
+                                pDisplay.tabIndex = 0;
+                                pDisplay.appendChild(item(elements[0].text));
+
+                                elements.forEach((el, i) => {
+                                    const itm = item(el.text);
+                                    itm.addEventListener("click", () => {
+                                        pDropdown.select(i);
+                                        pDropdown.close();
+                                    });
+                                    pItems.appendChild(itm);
+                                });
+
+                                pDisplay.addEventListener("click", pDropdown.toggle);
+                                document.addEventListener("click", e => {
+                                    if (!pDropdown.contains(e.target)) {
+                                        pDropdown.close();
+                                    }
+                                });
+
+                                const active = document.querySelector(".question-link-active");
+                                if (active) {
+                                    const index = elements.findIndex(el => el.text == active.textContent);
+                                    pDropdown.select(index);
+                                }
+                                pDropdown.dataset.currentClicked = "true";
+
+                                pWrapper.appendChild(pItems);
+                                pDropdown.appendChild(pDisplay);
+                                pDropdown.appendChild(pWrapper);
+
+                                const container = document.querySelector("#questions-row-container");
+                                if (container) {
+                                    const parent = container.parentNode;
+                                    parent.style.paddingRight = "14px";
+                                    parent.parentNode.style.padding = "0";
+                                    parent.appendChild(pDropdown);
+                                } else {
+                                    document.body.insertBefore(pDropdown, document.body.firstChild);
                                 }
                             }
 
