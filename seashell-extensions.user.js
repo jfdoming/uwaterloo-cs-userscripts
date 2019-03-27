@@ -1,19 +1,22 @@
 // ==UserScript==
 // @name         Seashell Extensions - Keyboard Shortcuts and More...
 // @namespace    https://github.com/jfdoming/
-// @version      0.6.1
+// @version      0.6.2
 // @license      GNU GPL v3
 // @description  Seashell extensions, including keyboard shortcuts and other helpful features
 // @author       Julian Dominguez-Schatz
 // @match        https://www.student.cs.uwaterloo.ca/~cs136//seashell/*
 // @match        https://www.student.cs.uwaterloo.ca/~cs136/seashell-old/*
 // @grant        GM_addStyle
+// @require      https://raw.githubusercontent.com/jfdoming/uwaterloo-cs-userscripts/master/common.js
 // @updateURL    https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/seashell-extensions.user.js
 // @downloadURL  https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/seashell-extensions.user.js
 // ==/UserScript==
 
 (function() {
     'use strict';
+
+    settings.hidden.title = "Seashell Extensions";
 
     let pDropdown = null;
 
@@ -91,7 +94,7 @@ background: #3C3C3C;
 `);
         const div = (id) => {
             const el = document.createElement("div");
-            if (id) {
+            if (exists(id)) {
                 el.id = id;
             }
             return el;
@@ -102,7 +105,7 @@ background: #3C3C3C;
             const onProjectPage = !!location.href.match(/.+\/frontend.html\#\/project\/.+/);
             if (onProjectPage) {
                 if (!wasOnProjectPage) {
-                    console.log("navigated to project page");
+                    log("navigated to project page");
 
                     const dropdownIntervalId = setInterval(() => {
                         const dropdown = document.querySelector("a.dropdown-toggle");
@@ -143,7 +146,7 @@ background: #3C3C3C;
                                 pDropdown.select = i => {
                                     pDropdown.dataset.currentClicked = "false";
 
-                                    if (typeof (pDropdown.dataset.kbCurrent) !== "undefined") {
+                                    if (exists(pDropdown.dataset.kbCurrent)) {
                                         pItems.children[+pDropdown.dataset.kbCurrent].classList.remove("focus");
                                     }
 
@@ -403,7 +406,7 @@ background: #3C3C3C;
         }
 
         if (shortcuts.length == 0) {
-            console.log("Adding shortcut listener...");
+            log("Adding shortcut listener...");
             document.addEventListener("keydown", (e) => {
                 if (!e.ctrlKey || e.key == "Control" || ignoreShortcuts()) {
                     return;
@@ -444,13 +447,13 @@ background: #3C3C3C;
             });
         }
 
-        console.log("Keyboard shortcut added:", description);
+        log("Keyboard shortcut added:", description);
         shortcuts.push({shortcut: shortcut, description: description, keyCode: keyCode, modifiers: modifiers, antiModifiers: antiModifiers, action: action, triggered: false});
     }
 
     addCtrlShortcut("KeyB", () => {
-        let runner = document.getElementById("toolbar-set-runner");
-        if (!runner) {
+        const runner = document.getElementById("toolbar-set-runner");
+        if (!exists(runner, "click")) {
             return;
         }
 
@@ -459,7 +462,7 @@ background: #3C3C3C;
     }, "Ctrl-B", "set current file as run file");
 
     addCtrlShortcut("KeyR", (e) => {
-        if (!runTab) {
+        if (!exists(runTab, "click")) {
             return;
         }
 
@@ -470,7 +473,7 @@ background: #3C3C3C;
     }, "Ctrl-R", "execute run file");
 
     addCtrlShortcut("KeyE", (e) => {
-        if (!runTab) {
+        if (!exists(runTab, "click")) {
             return;
         }
 
@@ -482,14 +485,14 @@ background: #3C3C3C;
 
     function getButtonByName(name) {
         return Array.from(document.getElementsByClassName("btn btn-link")).filter((el) => {
-            return el.children && el.children[0] && el.children[0].innerHTML == name
+            return exists(el.children, "length") && el.children.length > 0 && exists(el.children[0], "innerHTML") && el.children[0].innerHTML == name;
         })[0];
     }
 
     // add test
     addCtrlShortcut(["Digit1", ["shiftKey"]], (e) => {
-        let testButton = getButtonByName("add test…");
-        if (!testButton || !testButton.click) {
+        const testButton = getButtonByName("add test…");
+        if (!exists(testButton, "click")) {
             return;
         }
 
@@ -498,8 +501,8 @@ background: #3C3C3C;
 
     // add file
     addCtrlShortcut(["Digit2", ["shiftKey"]], (e) => {
-        let fileButton = getButtonByName("add file…");
-        if (!fileButton || !fileButton.click) {
+        const fileButton = getButtonByName("add file…");
+        if (!exists(fileButton, "click")) {
             return;
         }
 
@@ -508,8 +511,8 @@ background: #3C3C3C;
 
     // submit
     addCtrlShortcut(["KeyS", [], ["shiftKey"]], (e) => {
-        let submitButton = getButtonByName("submit question");
-        if (!submitButton || !submitButton.click) {
+        const submitButton = getButtonByName("submit question");
+        if (!exists(submitButton, "click")) {
             return;
         }
 
@@ -522,8 +525,8 @@ background: #3C3C3C;
 
     // submit directly
     addCtrlShortcut(["KeyS", ["shiftKey"]], (e) => {
-        let submitButton = getButtonByName("submit question");
-        if (!submitButton || !submitButton.click) {
+        const submitButton = getButtonByName("submit question");
+        if (!exists(submitButton, "click")) {
             return;
         }
 
@@ -535,7 +538,7 @@ background: #3C3C3C;
         document.head.appendChild(style);
 
         setTimeout(() => {
-            let focusButton = document.querySelector("input[value='Submit']");
+            const focusButton = document.querySelector("input[value='Submit']");
             focusButton.click();
             setTimeout(() => {
                 style.remove();
@@ -545,7 +548,7 @@ background: #3C3C3C;
 
     // next project
     addCtrlShortcut(["ArrowLeft", ["shiftKey", "altKey"]], (e) => {
-        if (pDropdown != null) {
+        if (exists(pDropdown)) {
             pDropdown.next();
             pDropdown.close();
         }
@@ -553,7 +556,7 @@ background: #3C3C3C;
 
     // previous project
     addCtrlShortcut(["ArrowRight", ["shiftKey", "altKey"]], (e) => {
-        if (pDropdown != null) {
+        if (exists(pDropdown)) {
             pDropdown.previous();
             pDropdown.close();
         }

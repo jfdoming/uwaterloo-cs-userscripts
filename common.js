@@ -1,12 +1,14 @@
+"use strict";
+
+var settings = {
+    hidden: {
+        title: "Extension"
+    }
+};
+
 // Here we take advantage of the difference between var and let: any functions declared with let are helper
 //   functions and will not exist in global scope, while those declared with var will be lifted to global scope.
 {
-    var settings = {
-        hidden: {
-            title: "Extension"
-        }
-    };
-
     // These are the helper functions.
 
     let colouredLog = (...args) => {
@@ -22,17 +24,17 @@
     var log = (...args) => {
         args.unshift("#35FF33", "INFO");
         colouredLog.apply(null, args);
-    }
+    };
 
     var warn = (...args) => {
         args.unshift("#FFD557", "WARN");
         colouredLog.apply(null, args);
-    }
+    };
 
     var error = (...args) => {
         args.unshift("#FF3333", "ERROR");
         colouredLog.apply(null, args);
-    }
+    };
 }
 
 function exists(obj, key = null) {
@@ -54,3 +56,11 @@ Object.defineProperty(Object.prototype, "hasOwnProperties", {
         return false;
     }
 });
+
+function logSettings() {
+    for (const key in settings) {
+        if (settings.hasOwnProperty(key) && key != "hidden") {
+            log("Setting %c" + key + "%c is " + (settings[key] ? "en" : "dis") + "abled.", "font-weight: bold;", "font-weight: normal");
+        }
+    }
+}

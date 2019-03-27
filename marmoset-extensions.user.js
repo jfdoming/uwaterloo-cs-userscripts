@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Marmoset Extension
 // @namespace    https://github.com/jfdoming/
-// @version      0.5.1
+// @version      0.5.2
 // @license      GNU GPL v3
 // @description  An extension that makes using Marmoset just a little easier.
 // @author       Julian Dominguez-Schatz
 // @match        https://marmoset.student.cs.uwaterloo.ca/view/*
 // @grant        GM_addStyle
+// @require      https://raw.githubusercontent.com/jfdoming/uwaterloo-cs-userscripts/master/common.js
 // @updateURL    https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/marmoset-extensions.user.js
 // @downloadURL  https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/marmoset-extensions.user.js
 // ==/UserScript==
@@ -16,61 +17,10 @@
 
     GM_addStyle("* { font-family: Verdana, Arial; font-size: 14px; } table { border-style: solid; border-width: 3px; border-color: black; }");
 
-    const USE_FAST_LINKS = false;
-    const CACHE_SCORES = false;
+    settings.hidden.title = "Marmoset Extensions";
 
-    const SCRIPT_TITLE = "Marmoset Extension";
-
-    // Here we take advantage of the difference between var and let: any functions declared with let are helper
-    //   functions and will not exist in global scope, while those declared with var will be lifted to global scope.
-    {
-        // These are the helper functions.
-
-        let colouredLog = (...args) => {
-            let colour = args.splice(0, 1);
-            let channel = args.splice(0, 1);
-            args.splice(1, 0, "background: black; color: white;", "background: auto; color: auto;", "font-weight: bold; background: " + colour + ";", "font-weight: auto; background: auto;");
-            args[0] = "%c[" + SCRIPT_TITLE + "]%c %c[" + channel + "]%c " + args[0];
-            console.log.apply(null, args);
-        };
-
-        // These are functions that use the above helper functions.
-
-        var log = (...args) => {
-            args.unshift("#35FF33", "INFO");
-            colouredLog.apply(null, args);
-        }
-
-        var warn = (...args) => {
-            args.unshift("#FFD557", "WARN");
-            colouredLog.apply(null, args);
-        }
-
-        var error = (...args) => {
-            args.unshift("#FF3333", "ERROR");
-            colouredLog.apply(null, args);
-        }
-    }
-
-    function exists(obj, key = null) {
-        return (typeof obj !== "undefined" && obj !== null) &&
-            (typeof key === "undefined" || key === null || (typeof obj[key] !== "undefined" && obj[key] !== null));
-    }
-
-    function at(obj, key, def) {
-        return exists(obj, key) ? obj[key] : def;
-    }
-
-    Object.defineProperty(Object.prototype, "hasOwnProperties", {
-        value: function() {
-            for (const key in this) {
-                if (this.hasOwnProperty(key)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    });
+    settings.useFastLinks = false;
+    settings.cacheScores = false;
 
     // Logic related to switching pages.
 
@@ -129,7 +79,7 @@
     }
 
     function enableLinkRedirect(el) {
-        if (!USE_FAST_LINKS || !exists(el, "addEventListener")) {
+        if (!settings.useFastLinks || !exists(el, "addEventListener")) {
             return;
         }
 
@@ -146,7 +96,7 @@
 
     function onPageLoad(body = document.body, url = location.href, callback) {
         // Prevent reloading the page so our script doesn't get unloaded.
-        if (USE_FAST_LINKS) {
+        if (settings.useFastLinks) {
             let linkElements = body.getElementsByTagName("a");
             if (exists(linkElements)) {
                 Array.from(linkElements).forEach(enableLinkRedirect);
@@ -172,7 +122,7 @@
             }
         } else {
             log("Current page not registed.");
-            if (USE_FAST_LINKS) {
+            if (settings.useFastLinks) {
                 navigate(url);
             }
         }
@@ -248,7 +198,7 @@
         }
 
         const cacheKey = "submission_score_" + submissionPK;
-        if (CACHE_SCORES && submissionPK != -1) {
+        if (settings.cacheScores && submissionPK != -1) {
             const storedScoreString = localStorage.getItem(cacheKey);
             if (exists(storedScoreString)) {
                 const storedScore = JSON.parse(storedScoreString);
@@ -270,7 +220,7 @@
             let testResults = html.getElementsByClassName("testResults");
             let score = getTestScore(testResults[0], url);
 
-            if (CACHE_SCORES) {
+            if (settings.cacheScores) {
                 localStorage.setItem(cacheKey, JSON.stringify(score));
             }
             return score;
@@ -485,11 +435,10 @@
     /////////////////////////////////////////////////// End adding handlers. ///////////////////////////////////////////////////
 
     // Print out the user's settings.
-    log("Setting %cUSE_FAST_LINKS%c is " + (USE_FAST_LINKS ? "en" : "dis") + "abled.", "font-weight: bold;", "font-weight: normal");
-    log("Setting %cCACHE_SCORES%c is " + (CACHE_SCORES ? "en" : "dis") + "abled.", "font-weight: bold;", "font-weight: normal");
+    logSettings();
 
     // Handle when the user clicks the back button.
-    if (USE_FAST_LINKS) {
+    if (settings.useFastLinks) {
         window.addEventListener("popstate", (e) => {
             fetchPage(location.href, false);
         });
