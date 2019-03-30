@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Seashell Extensions - Keyboard Shortcuts and More...
 // @namespace    https://github.com/jfdoming/
-// @version      0.6.3
+// @version      0.6.4
 // @license      GNU GPL v3
 // @description  Seashell extensions, including keyboard shortcuts and other helpful features
 // @author       Julian Dominguez-Schatz
@@ -20,15 +20,32 @@
 
     let pDropdown = null;
 
-    const commentScript = document.createElement("script");
-    commentScript.type = "text/javascript";
-    commentScript.src = "https://codemirror.net/addon/comment/comment.js";
-    document.head.appendChild(commentScript);
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
 
+    const scripts = Promise.all([
+        loadScript("https://codemirror.net/addon/comment/comment.js"),
+        loadScript("https://codemirror.net/addon/edit/trailingspace.js"),
+        loadScript("https://codemirror.net/addon/edit/closebrackets.js"),
+    ]);
+
+    let cmEditor = null;
     let CodeMirror = null;
 
     {
         GM_addStyle(`
+.marmoset-details-body {
+color: #CCCCCC
+}
+
 html {
 overflow-y: scroll;
 }
@@ -98,6 +115,12 @@ color: #FFAAAA;
 .project-dd-item:hover, .project-dd-item.focus {
 background: #3C3C3C;
 }
+
+.cm-trailingspace {
+background:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAYAAAC09K7GAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAALEAAACxABrSO9dQAAAAd0SU1FB9sJDw4cOCW1/KIAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAAGHRFWHRTb2Z0d2FyZQBwYWludC5uZXQgNC4xLjVkR1hSAAAAGUlEQVQYV2OAgf+HGP5DmQgOmEaRYWBgAAAaRgsBdek2BQAAAABJRU5ErkJggg==');
+background-position: left bottom;
+background-repeat: repeat-x;
+}
 `);
         const div = (id) => {
             const el = document.createElement("div");
@@ -111,6 +134,45 @@ background: #3C3C3C;
         const listener = () => {
             const onProjectPage = !!location.href.match(/.+\/frontend.html\#\/project\/.+/);
             if (onProjectPage) {
+                const cmIntervalId = setInterval(() => {
+                    const newCmEditor = document.querySelector("#editor > .CodeMirror");
+                    if (!exists(newCmEditor)) {
+                        return;
+                    }
+
+                    clearInterval(cmIntervalId);
+
+                    if (newCmEditor != cmEditor) {
+                        cmEditor = newCmEditor;
+                        CodeMirror = cmEditor.CodeMirror;
+                        var setSetting = (...args) => {
+                            if (args.length > 1) {
+                                settings[args[0]] = args[1];
+                            }
+
+                            log("Option " + args[0] + " is now " + args[1] + ".");
+                            CodeMirror.setOption(...args);
+                        };
+
+                        // Set options.
+                        scripts.then(() => {
+                            setSetting("showTrailingSpace", true);
+                            setSetting("autoCloseBrackets", true);
+                        });
+
+                        // Polyfill the lineSeparator function.
+                        if (!exists(CodeMirror, "lineSeparator")) {
+                            CodeMirror.lineSeparator = () => {
+                                const sep = CodeMirror.getOption("lineSeparator");
+                                if (sep) {
+                                    return sep;
+                                }
+                                return "\n";
+                            };
+                        }
+                    }
+                });
+
                 if (!wasOnProjectPage) {
                     log("navigated to project page");
 
@@ -133,8 +195,6 @@ background: #3C3C3C;
                                     dropdown.click();
                                 }
                             });
-
-                            CodeMirror = document.querySelector("#editor > .CodeMirror").CodeMirror;
 
                             const links = document.querySelectorAll(".questions-row a");
                             if (links && !document.getElementById("project-dropdown")) {
@@ -268,10 +328,7 @@ background: #3C3C3C;
         return text.length > 0 ? text[0].toUpperCase() + text.substring(1) : "";
     }
 
-    // fix for the Marmoset result dialog
-    GM_addStyle(".marmoset-details-body { color: #CCCCCC }");
-
-    // HELP DIALOG //
+    ////////////////////////////////// HELP DIALOG ////////////////////////////////////
 
     // add help button
     let helpLinkContainer = document.createElement("li");
@@ -384,7 +441,7 @@ background: #3C3C3C;
         helpTextContainer.style.top = "-" + HELP_TRANSITION_DISTANCE;
     }
 
-    // END HELP DIALOG //
+    ////////////////////////////////// END HELP DIALOG ////////////////////////////////
 
     function ignoreShortcuts() {
         return !!document.getElementsByClassName("modal fade ng-isolate-scope in")[0];
@@ -457,8 +514,18 @@ background: #3C3C3C;
         }
 
         log("Keyboard shortcut added:", description);
-        shortcuts.push({shortcut: shortcut, description: description, keyCode: keyCode, modifiers: modifiers, antiModifiers: antiModifiers, action: action, triggered: false});
+        shortcuts.push({
+            shortcut: shortcut,
+            description: description,
+            keyCode: keyCode,
+            modifiers: modifiers,
+            antiModifiers: antiModifiers,
+            action: action,
+            triggered: false
+        });
     }
+
+    ////////////////////////////////// ADD KEYBOARD SHORTCUTS HERE //////////////////////////////////
 
     addCtrlShortcut("KeyB", () => {
         const runner = document.getElementById("toolbar-set-runner");
@@ -583,4 +650,8 @@ background: #3C3C3C;
         }
         CodeMirror.toggleComment();
     }, "Ctrl-/", "toggle inline comment (editor only)");
+
+    ////////////////////////////////// END ADDING KEYBOARD SHORTCUTS ////////////////////////////////
+
+    logSettings();
 })();
