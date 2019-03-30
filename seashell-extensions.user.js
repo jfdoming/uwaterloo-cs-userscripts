@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Seashell Extensions - Keyboard Shortcuts and More...
 // @namespace    https://github.com/jfdoming/
-// @version      0.6.2
+// @version      0.6.3
 // @license      GNU GPL v3
 // @description  Seashell extensions, including keyboard shortcuts and other helpful features
 // @author       Julian Dominguez-Schatz
@@ -19,6 +19,13 @@
     settings.hidden.title = "Seashell Extensions";
 
     let pDropdown = null;
+
+    const commentScript = document.createElement("script");
+    commentScript.type = "text/javascript";
+    commentScript.src = "https://codemirror.net/addon/comment/comment.js";
+    document.head.appendChild(commentScript);
+
+    let CodeMirror = null;
 
     {
         GM_addStyle(`
@@ -126,6 +133,8 @@ background: #3C3C3C;
                                     dropdown.click();
                                 }
                             });
+
+                            CodeMirror = document.querySelector("#editor > .CodeMirror").CodeMirror;
 
                             const links = document.querySelectorAll(".questions-row a");
                             if (links && !document.getElementById("project-dropdown")) {
@@ -566,4 +575,12 @@ background: #3C3C3C;
     addCtrlShortcut("F1", (e) => {
         helpLink.click();
     }, "Ctrl-F1", "open this help page");
+
+    // toggle inline comment
+    addCtrlShortcut("Slash", (e) => {
+        if (!exists(CodeMirror, "hasFocus") || !exists(CodeMirror, "toggleComment") || !CodeMirror.hasFocus()) {
+            return;
+        }
+        CodeMirror.toggleComment();
+    }, "Ctrl-/", "toggle inline comment (editor only)");
 })();
