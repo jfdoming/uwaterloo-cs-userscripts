@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Marmoset Extension
 // @namespace    https://github.com/jfdoming/
-// @version      0.5.2
+// @version      0.5.3
 // @license      GNU GPL v3
 // @description  An extension that makes using Marmoset just a little easier.
 // @author       Julian Dominguez-Schatz
 // @match        https://marmoset.student.cs.uwaterloo.ca/view/*
+// @match        https://marmoset.student.cs.uwaterloo.ca/submitServer-*/view/*
 // @grant        GM_addStyle
 // @require      https://raw.githubusercontent.com/jfdoming/uwaterloo-cs-userscripts/master/common.js
 // @updateURL    https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/marmoset-extensions.user.js
@@ -22,13 +23,16 @@
     settings.useFastLinks = false;
     settings.cacheScores = false;
 
+    const urlMatch = location.href.match(/https:\/\/marmoset.student.cs.uwaterloo.ca\/(?:submitServer-[fws][0-9]{2}\/)?view/);
+    const BASE_URL = urlMatch && urlMatch[0] ? urlMatch[0] + "/" : "https://marmoset.student.cs.uwaterloo.ca/view/";
+
     // Logic related to switching pages.
 
     let handlers = [];
     let currentHref = location.href;
 
     function registerPage(href = "", handler = null) {
-        href = "https://marmoset.student.cs.uwaterloo.ca/" + href;
+        href = BASE_URL + href;
         handlers.push({href: href, handler: handler});
     }
 
@@ -187,7 +191,7 @@
 
         let url = submissionPK;
         if (typeof submissionPK === "number") {
-            url = "https://marmoset.student.cs.uwaterloo.ca/view/submission.jsp?submissionPK=" + submissionPK;
+            url = BASE_URL + "submission.jsp?submissionPK=" + submissionPK;
         } else {
             const matchResults = submissionPK.match(/^.+?submissionPK=(\d+)\D*?/);
             if (exists(matchResults, "length") && matchResults.length > 1) {
@@ -246,7 +250,7 @@
             return wrongUrl(projectPK);
         }
 
-        let url = (typeof projectPK == "number") ? ("https://marmoset.student.cs.uwaterloo.ca/view/project.jsp?projectPK=" + projectPK) : projectPK;
+        let url = (typeof projectPK == "number") ? (BASE_URL + "project.jsp?projectPK=" + projectPK) : projectPK;
         return fetch(url)
             .then((response) => response ? response.text() : null)
             .then(
@@ -317,7 +321,7 @@
 
     /////////////////////////////////////////////////// Add handlers here. /////////////////////////////////////////////////////
 
-    registerPage("view/course.jsp", (body) => {
+    registerPage("course.jsp", (body) => {
         let testResults = body.getElementsByTagName("table")[0];
         let rows = Array.from(testResults.rows);
 
@@ -375,7 +379,7 @@
         return Promise.all(promises);
     });
 
-    registerPage("view/submission.jsp", (body) => {
+    registerPage("submission.jsp", (body) => {
         let testResults = body.getElementsByClassName("testResults")[0];
         let totalText = document.createElement("div");
         totalText.style.marginTop = "1rem";
@@ -385,7 +389,7 @@
         return Promise.resolve();
     });
 
-    registerPage("view/project.jsp", (body) => {
+    registerPage("project.jsp", (body) => {
         let testResults = body.getElementsByTagName("table")[0];
         let rows = Array.from(testResults.rows);
 
