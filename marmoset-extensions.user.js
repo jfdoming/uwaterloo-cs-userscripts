@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Marmoset Extension
 // @namespace    https://github.com/jfdoming/
-// @version      0.6.1
+// @version      0.6.2
 // @license      GNU GPL v3
 // @description  An extension that makes using Marmoset just a little easier.
 // @author       Julian Dominguez-Schatz
@@ -151,7 +151,7 @@
         return filteredItems[0];
     }
 
-    function getTestScore(testResults, url) {
+    function getTestScore(testResults) {
         function getRowPoints(row) {
             const result = row && row.children[3] ? +row.children[3].textContent : 0;
             return result === result ? result : 0;
@@ -168,7 +168,7 @@
 
         let testRows = testResults.rows;
         if (!exists(testRows)) {
-            return {overallScore: 0, overallMax: 0};
+            testRows = [];
         }
         return Array.from(testRows).reduce((rror, row) => {
             if (!exists(row)) {
@@ -189,7 +189,6 @@
                 overallMax: rowPoints + at(rror, "overallMax", 0)
             };
         }, {
-            url,
             privateScore: 0,
             privateMax: 0,
             overallScore: 0,
@@ -203,9 +202,7 @@
         }
 
         let url = submissionPK;
-        if (typeof submissionPK === "number") {
-            url = BASE_URL + "submission.jsp?submissionPK=" + submissionPK;
-        } else {
+        if (typeof submissionPK === "string") {
             const matchResults = submissionPK.match(/^.+?submissionPK=(\d+)\D*?/);
             if (exists(matchResults, "length") && matchResults.length > 1) {
                 submissionPK = +matchResults[1];
@@ -213,6 +210,7 @@
                 submissionPK = -1;
             }
         }
+        url = BASE_URL + "submission.jsp?submissionPK=" + submissionPK;
 
         const cacheKey = "submission_score_" + submissionPK;
         if (settings.cacheScores && submissionPK != -1) {
@@ -235,10 +233,9 @@
 
             let html = new DOMParser().parseFromString(text, "text/html");
             let testResults = html.getElementsByClassName("testResults");
-            let score = getTestScore(testResults[0], url);
+            let score = { ...getTestScore(testResults[0]), url };
             let releaseTestText = Array.from(html.getElementsByTagName("p")).find(el => el.textContent.includes("release tests"));
             let releaseTestScoreMatch = releaseTestText ? releaseTestText.textContent.match(/[\s\S]+?(\d+)\/(\d+)[\s\S]+/) : [, 0, 0];
-            console.log(releaseTestText, releaseTestScoreMatch);
             score.releaseScore = +releaseTestScoreMatch[1];
             score.releaseMax = +releaseTestScoreMatch[2];
             score.overallScore += score.releaseScore;
