@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Marmoset Extension
 // @namespace    https://github.com/jfdoming/
-// @version      0.5.3
+// @version      0.6.0
 // @license      GNU GPL v3
 // @description  An extension that makes using Marmoset just a little easier.
 // @author       Julian Dominguez-Schatz
@@ -153,7 +153,7 @@
 
     function getTestScore(testResults, url) {
         function getRowPoints(row) {
-            return row.children[3].textContent;
+            return row && row.children[3] ? row.children[3].textContent : 0;
         }
         function didRowPass(row) {
             return findElementWithText(row, "td", "passed") != null;
@@ -223,6 +223,12 @@
             let html = new DOMParser().parseFromString(text, "text/html");
             let testResults = html.getElementsByClassName("testResults");
             let score = getTestScore(testResults[0], url);
+            let releaseTestText = Array.from(html.getElementsByTagName("p")).find(el => el.textContent.includes("release"));
+            let releaseTestScoreMatch = releaseTestText ? releaseTestText.textContent.match(/[\s\S]+?(\d+)\/(\d+)[\s\S]+/) : [, 0, 0];
+            score.releaseScore = +releaseTestScoreMatch[1];
+            score.releaseMax = +releaseTestScoreMatch[2];
+            score.overallScore += score.releaseScore;
+            score.overallMax += score.releaseMax;
 
             if (settings.cacheScores) {
                 localStorage.setItem(cacheKey, JSON.stringify(score));
