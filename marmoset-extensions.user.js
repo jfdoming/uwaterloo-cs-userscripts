@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Marmoset Extension
 // @namespace    https://github.com/jfdoming/
-// @version      0.6.0
+// @version      0.6.1
 // @license      GNU GPL v3
 // @description  An extension that makes using Marmoset just a little easier.
 // @author       Julian Dominguez-Schatz
@@ -125,7 +125,7 @@
                 result.then(callback);
             }
         } else {
-            log("Current page not registed.");
+            log("Current page not registered.");
             if (settings.useFastLinks) {
                 navigate(url);
             }
@@ -153,7 +153,8 @@
 
     function getTestScore(testResults, url) {
         function getRowPoints(row) {
-            return row && row.children[3] ? row.children[3].textContent : 0;
+            const result = row && row.children[3] ? +row.children[3].textContent : 0;
+            return result === result ? result : 0;
         }
         function didRowPass(row) {
             return findElementWithText(row, "td", "passed") != null;
@@ -161,26 +162,38 @@
         function isRowPrivate(row) {
             return findElementWithText(row, "td", "secret") != null;
         }
+        function isRowRelease(row) {
+            return findElementWithText(row, "td", "release") != null;
+        }
 
         let testRows = testResults.rows;
         if (!exists(testRows)) {
-            return {total: 0, max: 0};
+            return {overallScore: 0, overallMax: 0};
         }
         return Array.from(testRows).reduce((rror, row) => {
             if (!exists(row)) {
-                return;
+                return rror;
             }
 
-            const rowPoints = +getRowPoints(row);
+            if (isRowRelease(row)) {
+                return rror;
+            }
+
+            const rowPoints = getRowPoints(row);
             const rowPassed = didRowPass(row);
             const rowPrivate = isRowPrivate(row);
             return {
-                url: url,
                 privateScore: rowPassed * rowPrivate * rowPoints + at(rror, "privateScore", 0),
                 privateMax: rowPrivate * rowPoints + at(rror, "privateMax", 0),
                 overallScore: rowPassed * rowPoints + at(rror, "overallScore", 0),
                 overallMax: rowPoints + at(rror, "overallMax", 0)
-            }
+            };
+        }, {
+            url,
+            privateScore: 0,
+            privateMax: 0,
+            overallScore: 0,
+            overallMax: 0
         });
     }
 
@@ -223,8 +236,9 @@
             let html = new DOMParser().parseFromString(text, "text/html");
             let testResults = html.getElementsByClassName("testResults");
             let score = getTestScore(testResults[0], url);
-            let releaseTestText = Array.from(html.getElementsByTagName("p")).find(el => el.textContent.includes("release"));
+            let releaseTestText = Array.from(html.getElementsByTagName("p")).find(el => el.textContent.includes("release tests"));
             let releaseTestScoreMatch = releaseTestText ? releaseTestText.textContent.match(/[\s\S]+?(\d+)\/(\d+)[\s\S]+/) : [, 0, 0];
+            console.log(releaseTestText, releaseTestScoreMatch);
             score.releaseScore = +releaseTestScoreMatch[1];
             score.releaseMax = +releaseTestScoreMatch[2];
             score.overallScore += score.releaseScore;
