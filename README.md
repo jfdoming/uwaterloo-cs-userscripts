@@ -8,3 +8,4 @@ After installing Tampermonkey or another userscript manager, click one of the li
 |------------------|------------|
 |Seashell Extension|[Install](https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/seashell-extensions.user.js)|
 |Marmoset Extension|[Install](https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/marmoset-extensions.user.js)|
+|Course Selection Extension|[Install](https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/adm-extensions.user.js)|
