@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Course Search Extension
 // @namespace    https://github.com/jfdoming/
-// @version      0.1
+// @version      0.1.1
 // @license      GNU GPL v3
 // @description  An extension that makes searching for courses just a little easier.
 // @author       Julian Dominguez-Schatz
 // @match        http://www.adm.uwaterloo.ca/*
+// @match        https://classes.uwaterloo.ca/*
 // @grant        GM_addStyle
 // @require      https://raw.githubusercontent.com/jfdoming/uwaterloo-cs-userscripts/master/common.js
 // @updateURL    https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/adm-extensions.user.js
