@@ -5,6 +5,7 @@
 // @license      GNU GPL v3
 // @description  Seashell extensions, including keyboard shortcuts and other helpful features
 // @author       Julian Dominguez-Schatz
+// @match        https://www.student.cs.uwaterloo.ca/~cs136/seashell/*
 // @match        https://www.student.cs.uwaterloo.ca/~cs136//seashell/*
 // @match        https://www.student.cs.uwaterloo.ca/~cs136/seashell-old/*
 // @grant        GM_addStyle
