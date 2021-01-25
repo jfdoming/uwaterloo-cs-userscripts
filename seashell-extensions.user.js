@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Seashell Extensions - Keyboard Shortcuts and More...
 // @namespace    https://github.com/jfdoming/
-// @version      0.6.5
+// @version      0.6.6
 // @license      GNU GPL v3
 // @description  Seashell extensions, including keyboard shortcuts and other helpful features
 // @author       Julian Dominguez-Schatz
-// @match        https://www.student.cs.uwaterloo.ca/~cs136/seashell/*
-// @match        https://www.student.cs.uwaterloo.ca/~cs136//seashell/*
-// @match        https://www.student.cs.uwaterloo.ca/~cs136/seashell-old/*
+// @match        student.cs.uwaterloo.ca/~cs136/seashell/*
+// @match        student.cs.uwaterloo.ca/~cs136//seashell/*
+// @match        student.cs.uwaterloo.ca/~cs136/seashell-old/*
 // @grant        GM_addStyle
 // @require      https://raw.githubusercontent.com/jfdoming/uwaterloo-cs-userscripts/master/common.js
 // @updateURL    https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/seashell-extensions.user.js
