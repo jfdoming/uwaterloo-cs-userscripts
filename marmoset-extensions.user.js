@@ -7,6 +7,7 @@
 // @author       Julian Dominguez-Schatz
 // @match        https://marmoset.student.cs.uwaterloo.ca/view/*
 // @match        https://marmoset.student.cs.uwaterloo.ca/submitServer-*/view/*
+// @match        https://marmoset.student.cs.uwaterloo.ca/marmoset-*/view/*
 // @grant        GM_addStyle
 // @require      https://raw.githubusercontent.com/jfdoming/uwaterloo-cs-userscripts/master/common.js
 // @updateURL    https://github.com/jfdoming/uwaterloo-cs-userscripts/raw/master/marmoset-extensions.user.js
