@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Marmoset Extension
 // @namespace    https://github.com/jfdoming/
-// @version      0.6.2
+// @version      0.6.3
 // @license      GNU GPL v3
 // @description  An extension that makes using Marmoset just a little easier.
 // @author       Julian Dominguez-Schatz
