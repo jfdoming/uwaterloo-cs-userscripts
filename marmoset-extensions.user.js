@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Marmoset Extension
 // @namespace    https://github.com/jfdoming/
-// @version      0.6.3
+// @version      0.6.4
 // @license      GNU GPL v3
 // @description  An extension that makes using Marmoset just a little easier.
 // @author       Julian Dominguez-Schatz
@@ -24,7 +24,7 @@
     settings.useFastLinks = false;
     settings.cacheScores = false;
 
-    const urlMatch = location.href.match(/https:\/\/marmoset.student.cs.uwaterloo.ca\/(?:submitServer-[fws][0-9]{2}\/)?view/);
+    const urlMatch = location.href.match(/https:\/\/marmoset.student.cs.uwaterloo.ca\/[a-zA-Z0-9-_]*?\/view/);
     const BASE_URL = urlMatch && urlMatch[0] ? urlMatch[0] + "/" : "https://marmoset.student.cs.uwaterloo.ca/view/";
 
     // Logic related to switching pages.
